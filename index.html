@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Avisos Meteorológicos PRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        :root {
+            --navy: #10416b; 
+            --light-blue: #dae3ec; 
+            --accent-blue: #2e86c1;
+            --text-dark: #2c3e50;
+            --bg-dark: #0b1d35; /* Azul marino profundo para el fondo */
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            /* Fondo elegante azul marino con un sutil gradiente */
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a3a5f 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            max-width: 1200px;
+            width: 100%;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start; 
+        }
+
+        /* --- Panel de Control --- */
+        .editor-panel {
+            flex: 1;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            /* Sombra más pronunciada para resaltar sobre el fondo oscuro */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            min-width: 350px;
+            max-width: 450px;
+        }
+
+        h2 { color: var(--navy); margin-top: 0; font-size: 1.5rem; }
+
+        .form-group { margin-bottom: 12px; }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+            color: var(--text-dark);
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+            background-color: #fafbfc;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 5px rgba(46, 134, 193, 0.3);
+        }
+
+        button {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 15px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(46, 134, 193, 0.3);
+        }
+
+        button:hover { 
+            background-color: var(--navy); 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 15px rgba(16, 65, 107, 0.4);
+        }
+
+        /* --- Conversor --- */
+        .kto-converter {
+            background-color: #f8faff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #d1d9e6;
+        }
+
+        .converter-inputs {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        #out-knots {
+            background-color: #e8f8f0;
+            color: #1e8449;
+            font-weight: bold;
+            cursor: copy;
+            border-color: #a9dfbf;
+        }
+
+        /* --- ÁREA DE CAPTURA (IMAGEN) --- */
+        #aviso-capture {
+            width: 500px; 
+            background: white;
+            padding: 15px 15px 0px 15px; 
+            display: flex;
+            flex-direction: column;
+            height: fit-content; 
+            align-self: flex-start;
+            /* Sombra elegante para la tarjeta de previsualización */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 15px; 
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            letter-spacing: 1px;
+            color: var(--navy);
+            text-transform: uppercase;
+        }
+
+        .header p {
+            margin: 2px 0;
+            font-weight: bold;
+            font-size: 16px;
+            color: var(--navy);
+        }
+
+        .aviso-card {
+            background-color: var(--light-blue);
+            border-radius: 35px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .icon-circle {
+            min-width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px; 
+            color: var(--navy);
+        }
+
+        .content b {
+            font-size: 17px;
+            display: block;
+            margin-bottom: 3px;
+            color: var(--navy);
+        }
+
+        .content p {
+            margin: 0;
+            line-height: 1.4;
+            font-size: 15px;
+            color: #333;
+            text-align: justify;
+        }
+
+        .footer-logo {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: -10px; 
+            padding-bottom: -15px; 
+            width: 100%;
+            margin: 0; 
+        }
+
+        .escudo {
+            width: 105px;
+            height: auto;
+            display: block;
+            margin-right: -20px; 
+        }
+
+        /* --- CRÉDITOS FINALES ELEGANTES --- */
+        .page-footer {
+            margin-top: 60px;
+            padding: 20px;
+            width: 100%;
+            text-align: center;
+            background: transparent; /* Fondo transparente para lucir el azul marino */
+            border-top: 1px solid rgba(255, 255, 255, 0.1); /* Línea sutil */
+            color: #dae3ec; /* Color claro y uniforme para todo el texto */
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+
+        .page-footer .name-tag {
+            font-weight: 700;
+            color: #ffffff; /* El nombre un poco más blanco para destacar sutilmente */
+        }
+
+        @media (max-width: 600px) {
+            #aviso-capture { width: 100%; padding: 10px 10px 0px 10px; }
+            .container { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="editor-panel">
+            <h2>Configurar Aviso</h2>
+            
+            <div class="kto-converter">
+                <label><i class="fas fa-calculator"></i> Conversor de Nudos (Ej: 20/30)</label>
+                <div class="converter-inputs">
+                    <input type="text" id="in-knots" placeholder="Nudos" oninput="convertKnots()">
+                    <i class="fas fa-arrow-right"></i>
+                    <input type="text" id="out-knots" placeholder="(km/h)" readonly title="Click para copiar">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Título Principal</label>
+                <input type="text" id="in-title" value="AVISO DE MAL TIEMPO" oninput="update()">
+            </div>
+            <div class="form-group">
+                <label>Centro Zonal</label>
+                <input type="text" id="in-centro" value="Centro Zonal de Meteorología Marina de Puerto Montt" oninput="update()">
+            </div>
+            <div class="form-group">
+                <label>Área Afectada</label>
+                <textarea id="in-area" rows="2" oninput="update()">Sector Aguas Interiores desde Islas Buta Chauques a Canal Moraleda.</textarea>
+            </div>
+            <div class="form-group">
+                <label>Período</label>
+                <textarea id="in-periodo" rows="2" oninput="update()">Martes 21 abril entre las 05:00 hrs, hasta el día Miércoles 22 abril hasta las 00:00 hrs.</textarea>
+            </div>
+            <div class="form-group">
+                <label>Condiciones Esperadas</label>
+                <textarea id="in-condiciones" rows="4" oninput="update()">Cubierto ocasional nublado, visibilidad regular ocasional buena (4/10 km) precipitaciones, viento N/NE 20/30 kt (37/55 km/h) rachas 40 kt (74/54 km/h), mar marejada a gruesa (2.0/3.0 m).</textarea>
+            </div>
+            <div class="form-group">
+                <label>Recomendaciones</label>
+                <textarea id="in-recom" rows="3" oninput="update()">La comunidad debe actuar con prudencia y cautela, respetando las normas de seguridad establecidas por la Autoridad Marítima.</textarea>
+            </div>
+            
+            <button onclick="downloadImage()">
+                <i class="fas fa-file-download"></i> DESCARGAR IMAGEN (JPG)
+            </button>
+        </div>
+
+        <div id="aviso-capture">
+            <div class="header">
+                <h1 id="out-title">AVISO DE MAL TIEMPO</h1>
+                <p id="out-centro">Centro Zonal de Meteorología Marina de Puerto Montt</p>
+            </div>
+
+            <div class="aviso-card">
+                <div class="section">
+                    <div class="icon-circle"><i class="fas fa-map-marker-alt"></i></div>
+                    <div class="content">
+                        <b>Área afectada:</b>
+                        <p id="out-area">Área Sector Aguas Interiores desde Islas Buta Chauques a Canal Moraleda.</p>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="icon-circle"><i class="far fa-clock"></i></div>
+                    <div class="content">
+                        <b>Período:</b>
+                        <p id="out-periodo">Martes 21 abril entre las 05:00 hrs, hasta el día Miércoles 22 abril hasta las 00:00 hrs.</p>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="icon-circle"><i class="fas fa-cloud-showers-heavy"></i></div>
+                    <div class="content">
+                        <b>Condiciones esperadas:</b>
+                        <p id="out-condiciones">Cubierto ocasional nublado, visibilidad regular ocasional buena (4/10 km) precipitaciones, viento N/NE 20/30 kt (37/55 km/h) rachas 40 kt (74/54 km/h), mar marejada a gruesa (2.0/3.0 m).</p>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="icon-circle" style="color: #e67e22;"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="content">
+                        <b>Recomendaciones a la comunidad:</b>
+                        <p id="out-recom">La comunidad debe actuar con prudencia y cautela, respetando las normas de seguridad establecidas por la Autoridad Marítima.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-logo">
+                <img src="https://ia600701.us.archive.org/9/items/logo-servimet_202602/file_00000000ef54720e86c73d7fc1640d52.png" 
+                     class="escudo" crossorigin="anonymous">
+            </div>
+        </div>
+    </div>
+
+    <div class="page-footer">
+        <i class="fas fa-code" style="margin-right: 8px;"></i> 
+        Herramienta desarrollada por <span class="name-tag">C1º (Met.) Francisco Salas Muñoz</span>
+    </div>
+
+    <script>
+        function update() {
+            document.getElementById('out-title').innerText = document.getElementById('in-title').value;
+            document.getElementById('out-centro').innerText = document.getElementById('in-centro').value;
+            document.getElementById('out-area').innerText = document.getElementById('in-area').value;
+            document.getElementById('out-periodo').innerText = document.getElementById('in-periodo').value;
+            document.getElementById('out-condiciones').innerText = document.getElementById('in-condiciones').value;
+            document.getElementById('out-recom').innerText = document.getElementById('in-recom').value;
+        }
+
+        function convertKnots() {
+            const input = document.getElementById('in-knots').value;
+            const outputField = document.getElementById('out-knots');
+            const numbers = input.match(/\d+(\.\d+)?/g);
+            if (numbers && numbers.length > 0) {
+                const converted = numbers.map(n => Math.round(parseFloat(n) * 1.852));
+                outputField.value = `(${converted.join('/')} km/h)`;
+            } else { outputField.value = ''; }
+        }
+
+        document.getElementById('out-knots').addEventListener('click', function() {
+            if (this.value) {
+                navigator.clipboard.writeText(this.value);
+                const originalBg = this.style.backgroundColor;
+                this.style.backgroundColor = '#d5f5e3';
+                setTimeout(() => this.style.backgroundColor = originalBg, 300);
+            }
+        });
+
+        function downloadImage() {
+            const container = document.getElementById("aviso-capture");
+            html2canvas(container, {
+                backgroundColor: "#ffffff",
+                scale: 2,
+                useCORS: true,
+                logging: false
+            }).then(canvas => {
+                const link = document.createElement("a");
+                let tituloInput = document.getElementById('in-title').value.trim();
+                let nombreArchivo = tituloInput ? tituloInput.replace(/ /g, "_") : "Aviso_Meteorologico";
+                link.download = `${nombreArchivo}.jpg`;
+                link.href = canvas.toDataURL("image/jpeg", 0.98);
+                link.click();
+            });
+        }
+    </script>
+</body>
+</html>
