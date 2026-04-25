@@ -4,17 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de Avisos Meteorológicos PRO</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
         :root {
+            /* Colores Interfaz del Editor */
             --navy: #10416b; 
             --light-blue: #dae3ec; 
             --accent-blue: #2e86c1;
             --text-dark: #2c3e50;
             --bg-dark: #0b1d35; 
+            
+            /* Colores Oficiales extraídos de la imagen para el Bando */
+            --off-teal: #1d5f7b;     /* Título principal y subtítulos internos */
+            --off-navy: #002255;     /* Subtítulo Centro Zonal */
+            --off-card: #e2eaf4;     /* Fondo de la tarjeta */
+            --off-text: #4a5a6a;     /* Texto de descripciones */
         }
 
         body {
@@ -121,50 +128,54 @@
             border-color: #a9dfbf;
         }
 
+        /* --- VISTA PREVIA DEL AVISO --- */
         #aviso-capture {
             width: 500px; 
             background: white;
-            padding: 15px 15px 0px 15px; 
+            padding: 20px 20px 0px 20px; 
             display: flex;
             flex-direction: column;
             height: fit-content; 
             align-self: flex-start;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
             
-            /* --- NUEVO MARCO --- */
-            border: 4px solid #1a1a1a; /* Línea negra/gris muy oscuro */
-            border-radius: 12px; /* Esquinas sutilmente redondeadas */
-            overflow: hidden; /* Asegura que las esquinas se corten limpiamente */
+            /* Fuente oficial tipo Arial para el documento final */
+            font-family: Arial, Helvetica, sans-serif; 
+            
+            /* Marco negro solicitado */
+            border: 4px solid #1a1a1a; 
+            border-radius: 12px; 
+            overflow: hidden; 
         }
 
         .header {
             text-align: center;
             margin-bottom: 15px; 
-            margin-top: 5px; /* Pequeño margen para separarlo del borde superior */
         }
 
         .header h1 {
             margin: 0;
             font-size: 28px;
-            letter-spacing: 1px;
-            color: var(--navy);
+            letter-spacing: 0.5px;
+            color: var(--off-teal); /* Color extraído de la imagen */
             text-transform: uppercase;
+            font-weight: bold;
         }
 
         .header p {
-            margin: 2px 0;
+            margin: 5px 0;
             font-weight: bold;
-            font-size: 16px;
-            color: var(--navy);
+            font-size: 17px;
+            color: var(--off-navy); /* Azul marino oscuro de la imagen */
         }
 
         .aviso-card {
-            background-color: var(--light-blue);
-            border-radius: 35px;
+            background-color: var(--off-card); /* Fondo gris celeste exacto */
+            border-radius: 25px; /* Ligeramente menos curvo, como en la foto */
             padding: 25px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px; /* Espaciado ajustado */
         }
 
         .section {
@@ -174,44 +185,52 @@
         }
 
         .icon-circle {
-            min-width: 60px;
-            height: 60px;
+            min-width: 50px;
+            height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px; 
-            color: var(--navy);
+            font-size: 35px; 
+            color: var(--off-teal); /* Iconos del mismo color que los títulos */
         }
 
+        /* Ajuste de colores y pesos para el texto interno */
         .content b {
-            font-size: 17px;
-            display: block;
-            margin-bottom: 3px;
-            color: var(--navy);
+            font-size: 18px;
+            color: var(--off-teal);
+            display: inline; 
+            margin-right: 5px;
         }
 
         .content p {
             margin: 0;
-            line-height: 1.4;
-            font-size: 15px;
-            color: #333;
-            text-align: justify;
+            line-height: 1.3;
+            font-size: 16px;
+            color: var(--off-text); /* Color pizarra oscuro */
+            display: inline;
+        }
+
+        /* Contenedor específico para forzar saltos de línea y justificar texto */
+        .text-block {
+            display: block; /* Cambiado a block para asegurar que el justificado actúe bien en todo el contenedor */
+            width: 100%;
+            text-align: justify; /* Texto justificado aplicado aquí */
         }
 
         .footer-logo {
             display: flex;
             justify-content: flex-end;
-            padding-top: -10px; 
-            padding-bottom: -15px; 
+            padding-top: 5px; 
+            padding-bottom: -10px; 
             width: 100%;
             margin: 0; 
         }
 
         .escudo {
-            width: 105px;
+            width: 90px;
             height: auto;
             display: block;
-            margin-right: -20px; 
+            margin-right: -10px; 
         }
 
         .page-footer {
@@ -254,7 +273,7 @@
 
             <div class="form-group">
                 <label>Título Principal</label>
-                <input type="text" id="in-title" value="AVISO DE MAL TIEMPO" oninput="update()">
+                <input type="text" id="in-title" value="AVISO DE VIENTO FUERTE" oninput="update()">
             </div>
             <div class="form-group">
                 <label>Centro Zonal</label>
@@ -262,15 +281,15 @@
             </div>
             <div class="form-group">
                 <label>Área Afectada</label>
-                <textarea id="in-area" rows="2" oninput="update()">Sector Aguas Interiores desde Islas Buta Chauques a Canal Moraleda.</textarea>
+                <textarea id="in-area" rows="2" oninput="update()">Sector Área Oceánica Corral a Boca del Guafo.</textarea>
             </div>
             <div class="form-group">
                 <label>Período</label>
-                <textarea id="in-periodo" rows="2" oninput="update()" placeholder="Pega aquí el texto VALIDO DESDE... o usa abreviaturas como LUN, MAR, ENE, DIC"></textarea>
+                <textarea id="in-periodo" rows="2" oninput="update()" placeholder="Pega aquí el texto VALIDO DESDE... o usa abreviaturas como LUN, MAR, ENE, DIC">Sábado 25 abril entre las 08:00 UTC, hasta el día Domingo 26 abril hasta las 02:00 UTC.</textarea>
             </div>
             <div class="form-group">
                 <label>Condiciones Esperadas</label>
-                <textarea id="in-condiciones" rows="4" oninput="update()">Cubierto ocasional nublado, visibilidad regular ocasional buena (4/10 km) precipitaciones, viento N/NE 20/30 kt (37/55 km/h) rachas 40 kt (74/54 km/h), mar marejada a gruesa (2.0/3.0 m).</textarea>
+                <textarea id="in-condiciones" rows="4" oninput="update()">Cubierto a nublado, visibilidad buena a regular (10/6 km) chubascos, viento S/SW 25/35 nudos (46/65 km/h) rachas 50 nudos (93 km/h), mar gruesa a muy gruesa (3.0/5.0 m).</textarea>
             </div>
             <div class="form-group">
                 <label>Recomendaciones</label>
@@ -284,7 +303,7 @@
 
         <div id="aviso-capture">
             <div class="header">
-                <h1 id="out-title">AVISO DE MAL TIEMPO</h1>
+                <h1 id="out-title">AVISO DE VIENTO FUERTE</h1>
                 <p id="out-centro">Centro Zonal de Meteorología Marina de Puerto Montt</p>
             </div>
 
@@ -292,32 +311,40 @@
                 <div class="section">
                     <div class="icon-circle"><i class="fas fa-map-marker-alt"></i></div>
                     <div class="content">
-                        <b>Área afectada:</b>
-                        <p id="out-area">Área Sector Aguas Interiores desde Islas Buta Chauques a Canal Moraleda.</p>
+                        <div class="text-block">
+                            <b>Área afectada:</b>
+                            <p id="out-area">Sector Área Oceánica Corral a Boca del Guafo.</p>
+                        </div>
                     </div>
                 </div>
 
                 <div class="section">
                     <div class="icon-circle"><i class="far fa-clock"></i></div>
                     <div class="content">
-                        <b>Período:</b>
-                        <p id="out-periodo">Martes 21 abril entre las 05:00 hrs, hasta el día Miércoles 22 abril hasta las 00:00 hrs.</p>
+                        <div class="text-block">
+                            <b>Período:</b>
+                            <p id="out-periodo">Sábado 25 abril entre las 08:00 UTC, hasta el día Domingo 26 abril hasta las 02:00 UTC.</p>
+                        </div>
                     </div>
                 </div>
 
                 <div class="section">
                     <div class="icon-circle"><i class="fas fa-cloud-showers-heavy"></i></div>
                     <div class="content">
-                        <b>Condiciones esperadas:</b>
-                        <p id="out-condiciones">Cubierto ocasional nublado, visibilidad regular ocasional buena (4/10 km) precipitaciones, viento N/NE 20/30 kt (37/55 km/h) rachas 40 kt (74/54 km/h), mar marejada a gruesa (2.0/3.0 m).</p>
+                        <div class="text-block">
+                            <b>Condiciones esperadas:</b><br>
+                            <p id="out-condiciones">Cubierto a nublado, visibilidad buena a regular (10/6 km) chubascos, viento S/SW 25/35 nudos (46/65 km/h) rachas 50 nudos (93 km/h), mar gruesa a muy gruesa (3.0/5.0 m).</p>
+                        </div>
                     </div>
                 </div>
 
                 <div class="section">
-                    <div class="icon-circle" style="color: #e67e22;"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="icon-circle" style="color: #f1c40f;"><i class="fas fa-exclamation-triangle"></i></div>
                     <div class="content">
-                        <b>Recomendaciones a la comunidad:</b>
-                        <p id="out-recom">La comunidad debe actuar con prudencia y cautela, respetando las normas de seguridad establecidas por la Autoridad Marítima.</p>
+                        <div class="text-block">
+                            <b>Recomendaciones a la comunidad:</b>
+                            <p id="out-recom">la comunidad debe actuar con prudencia y cautela, respetando las normas de seguridad establecidas por la Autoridad Marítima.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -336,15 +363,12 @@
 
     <script>
         function update() {
-            // El motor centralizado de limpieza que protege los datos
             function limpiarTexto(texto) {
                 if (!texto) return "";
                 
-                // Arreglo temporal para esconder y proteger información estructurada
                 let tokens = [];
 
                 // --- 1. PROTEGER BLOQUE "VALIDO DESDE..." ---
-                // Transforma la cadena aeronáutica/marítima y la guarda aislada para que no sufra alteraciones
                 const regexPeriodo = /V[AÁ]LIDO DESDE ([A-Z]{3})\s+(\d{1,2})\s+(\d{4})(?:\s*UTC)? HASTA ([A-Z]{3})\s+(\d{1,2})\s+(\d{4})(?:\s*UTC)?/gi;
                 texto = texto.replace(regexPeriodo, function(match, mesD, diaD, horaD, mesH, diaH, horaH) {
                     const mapM = {
@@ -375,19 +399,19 @@
                 });
 
                 // --- 2. CALCULAR NUDOS Y PROTEGERLOS ---
-                const regexNudos = /\b(\d+(?:\/\d+)?)\s*kt\b(?!\s*\()/gi;
-                texto = texto.replace(regexNudos, function(match, numeros) {
+                const regexNudos = /\b(\d+(?:\/\d+)?)\s*(kt|nudos)\b(?!\s*\()/gi;
+                texto = texto.replace(regexNudos, function(match, numeros, unidad) {
                     const partes = numeros.split('/');
                     const convertidos = partes.map(n => Math.round(parseFloat(n) * 1.852));
-                    const nudosFormat = match + ' (' + convertidos.join('/') + ' km/h)';
+                    const unidadTexto = unidad.toLowerCase() === 'kt' ? 'kt' : 'nudos';
+                    const nudosFormat = numeros + ' ' + unidadTexto + ' (' + convertidos.join('/') + ' km/h)';
                     tokens.push(nudosFormat);
                     return `__TOKEN_${tokens.length - 1}__`;
                 });
 
                 // --- 3. EXPANDIR ABREVIATURAS SUELTAS ---
-                // ENE y MAR con reglas para no tocar vientos ni mar
                 texto = texto.replace(/\bMAR\b(?=\s*\d+)/gi, "Marzo");
-                texto = texto.replace(/\bENE\b(?=\s*\d+(?!\s*kt))/gi, "Enero");
+                texto = texto.replace(/\bENE\b(?=\s*\d+(?!\s*(kt|nudos)))/gi, "Enero");
                 
                 const abrev = {
                     "feb": "febrero", "abr": "abril", "may": "mayo", "jun": "junio",
@@ -421,7 +445,6 @@
                 res = res.charAt(0).toUpperCase() + res.slice(1);
 
                 // --- 7. NOMBRES PROPIOS, MESES Y DÍAS ---
-                // Todo esto recuperará su mayúscula de forma garantizada
                 const nombresPropios = {
                     "sector": "Sector", "canal": "Canal", "moraleda": "Moraleda", "faro": "Faro", 
                     "guafo": "Guafo", "islas": "Islas", "buta": "Buta", "chauques": "Chauques", 
@@ -454,19 +477,23 @@
                     return tokens[parseInt(index)];
                 });
                 
-                // Limpieza en caso de puntos pegados seguidos ".."
                 res = res.replace(/\.\./g, ".");
 
                 return res;
             }
 
-            // Actualizar vista previa
             document.getElementById('out-title').innerText = document.getElementById('in-title').value;
             document.getElementById('out-centro').innerText = document.getElementById('in-centro').value;
             document.getElementById('out-area').innerText = limpiarTexto(document.getElementById('in-area').value);
             document.getElementById('out-periodo').innerText = limpiarTexto(document.getElementById('in-periodo').value);
             document.getElementById('out-condiciones').innerText = limpiarTexto(document.getElementById('in-condiciones').value);
-            document.getElementById('out-recom').innerText = limpiarTexto(document.getElementById('in-recom').value);
+            
+            // Especial para Recomendaciones: Mantener minúscula en la primera letra después del "Recomendaciones:" como en la imagen
+            let recomTexto = document.getElementById('in-recom').value;
+            if(recomTexto) {
+                recomTexto = recomTexto.charAt(0).toLowerCase() + recomTexto.slice(1);
+            }
+            document.getElementById('out-recom').innerText = limpiarTexto(recomTexto);
         }
 
         function convertKnots() {
