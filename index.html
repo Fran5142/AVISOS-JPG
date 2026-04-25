@@ -260,7 +260,7 @@
             </div>
             <div class="form-group">
                 <label>Período</label>
-                <textarea id="in-periodo" rows="2" oninput="update()">Martes 21 abril entre las 05:00 hrs, hasta el día Miércoles 22 abril hasta las 00:00 hrs.</textarea>
+                <textarea id="in-periodo" rows="2" oninput="update()" placeholder="Pega aquí el texto VALIDO DESDE... o usa abreviaturas como LUN, MAR, ENE, DIC"></textarea>
             </div>
             <div class="form-group">
                 <label>Condiciones Esperadas</label>
@@ -330,88 +330,133 @@
 
     <script>
         function update() {
-            // 1. Diccionario de correcciones ortográficas (minúsculas y abreviaturas)
-            const correccionesGenerales = {
-                "vis": "visibilidad",
-                "bahia": "bahía", "bahias": "bahías",
-                "dia": "día", "dias": "días",
-                "area": "área", "areas": "áreas",
-                "oceano": "océano", "oceanico": "oceánico", "oceánica": "oceánica",
-                "periodo": "período", "pronostico": "pronóstico",
-                "maxima": "máxima", "minima": "mínima",
-                "oceanica": "oceánica","oceanico": "oceánico",
-                "rafaga": "ráfaga", "rafagas": "ráfagas",
-                "debil": "débil", "debiles": "débiles",
-                "frio": "frío", "calido": "cálido",
-                "precipitacion": "precipitación", "precipitaciones": "precipitaciones"
-            };
-
-            // 2. Diccionario de Nombres Propios y Geográficos
-            const nombresPropios = {
-                "sector": "Sector", "canal": "Canal", "moraleda": "Moraleda", "faro": "Faro", 
-                "guafo": "Guafo", "islas": "Islas", "buta": "Buta", "chauques": "Chauques", 
-                "corral": "Corral", "boca": "Boca", "raper": "Raper", "corona": "Corona", 
-                "golfo": "Golfo", "penas": "Penas", "san": "San", "pedro": "Pedro", 
-                "isla": "Isla", "desertores": "Desertores", "corcovado": "Corcovado", 
-                "coronado": "Coronado", "seno": "Seno", "reloncavi": "Reloncaví", "reloncaví": "Reloncaví",
-                "aguas": "Aguas", "interiores": "Interiores", "quellon": "Quellón", "quellón": "Quellón", 
-                "guamblin": "Guamblín", "guamblín": "Guamblín", "chacao": "Chacao", "ancud": "Ancud", 
-                "puerto": "Puerto", "montt": "Montt", "aguirre": "Aguirre", "melinka": "Melinka", 
-                "chile": "Chile", "armada": "Armada", "bio bio": "Bío Bío", "bío bío": "Bío Bío", 
-                "los lagos": "Los Lagos", "aysen": "Aysén", "aysén": "Aysén", "norte": "Norte", 
-                "sur": "Sur", "este": "Este", "weste": "Weste", "norweste": "Norweste", 
-                "noreste": "Noreste", "sureste": "Sureste", "surweste": "Surweste"
-            };
-
+            // El motor centralizado de limpieza que protege los datos
             function limpiarTexto(texto) {
                 if (!texto) return "";
                 
-                // 1. Todo a minúsculas inicial
-                let resultado = texto.toLowerCase();
+                // Arreglo temporal para esconder y proteger información estructurada
+                let tokens = [];
 
-                // 2. Aplicar correcciones ortográficas generales
-                for (const [sinTilde, conTilde] of Object.entries(correccionesGenerales)) {
-                    let regex = new RegExp("\\b" + sinTilde + "\\b", "gi");
-                    resultado = resultado.replace(regex, conTilde);
-                }
+                // --- 1. PROTEGER BLOQUE "VALIDO DESDE..." ---
+                // Transforma la cadena aeronáutica/marítima y la guarda aislada para que no sufra alteraciones
+                const regexPeriodo = /V[AÁ]LIDO DESDE ([A-Z]{3})\s+(\d{1,2})\s+(\d{4})(?:\s*UTC)? HASTA ([A-Z]{3})\s+(\d{1,2})\s+(\d{4})(?:\s*UTC)?/gi;
+                texto = texto.replace(regexPeriodo, function(match, mesD, diaD, horaD, mesH, diaH, horaH) {
+                    const mapM = {
+                        "ENE": { n: "Enero", num: 0 }, "FEB": { n: "Febrero", num: 1 }, "MAR": { n: "Marzo", num: 2 },
+                        "ABR": { n: "Abril", num: 3 }, "MAY": { n: "Mayo", num: 4 }, "JUN": { n: "Junio", num: 5 },
+                        "JUL": { n: "Julio", num: 6 }, "AGO": { n: "Agosto", num: 7 }, "SEP": { n: "Septiembre", num: 8 },
+                        "OCT": { n: "Octubre", num: 9 }, "NOV": { n: "Noviembre", num: 10 }, "DIC": { n: "Diciembre", num: 11 }
+                    };
+                    const mDStr = mesD.toUpperCase();
+                    const mHStr = mesH.toUpperCase();
+                    if(!mapM[mDStr] || !mapM[mHStr]) return match;
+                    
+                    const dSem = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+                    const anio = new Date().getFullYear();
+                    
+                    let hD = horaD.replace(":", "");
+                    let hH = horaH.replace(":", "");
+                    const hdF = hD.substring(0,2) + ":" + hD.substring(2);
+                    const hhF = hH.substring(0,2) + ":" + hH.substring(2);
+                    
+                    const fD = new Date(anio, mapM[mDStr].num, parseInt(diaD));
+                    const fH = new Date(anio, mapM[mHStr].num, parseInt(diaH));
+                    
+                    const fraseFormateada = `${dSem[fD.getDay()]} ${diaD} ${mapM[mDStr].n} entre las ${hdF} UTC, hasta ${dSem[fH.getDay()]} ${diaH} de ${mapM[mHStr].n} hasta las ${hhF} UTC.`;
+                    
+                    tokens.push(fraseFormateada);
+                    return `__TOKEN_${tokens.length - 1}__`;
+                });
 
-                // NUEVO: 2.5 Cálculo automático de Nudos (KT) a (km/h) en el texto
-                // Detecta formatos como "50 kt" o "25/35 kt". 
-                // El (?!\s*\() evita que duplique el cálculo si ya hay un paréntesis adelante.
+                // --- 2. CALCULAR NUDOS Y PROTEGERLOS ---
                 const regexNudos = /\b(\d+(?:\/\d+)?)\s*kt\b(?!\s*\()/gi;
-                resultado = resultado.replace(regexNudos, function(match, numeros) {
-                    // Divide por si es un rango (ej. 25/35) y calcula ambos
+                texto = texto.replace(regexNudos, function(match, numeros) {
                     const partes = numeros.split('/');
                     const convertidos = partes.map(n => Math.round(parseFloat(n) * 1.852));
-                    // Devuelve "25/35 kt (46/65 km/h)"
-                    return match + ' (' + convertidos.join('/') + ' km/h)';
+                    const nudosFormat = match + ' (' + convertidos.join('/') + ' km/h)';
+                    tokens.push(nudosFormat);
+                    return `__TOKEN_${tokens.length - 1}__`;
                 });
 
-                // 3. Primera letra del texto en Mayúscula
-                resultado = resultado.charAt(0).toUpperCase() + resultado.slice(1);
+                // --- 3. EXPANDIR ABREVIATURAS SUELTAS ---
+                // ENE y MAR con reglas para no tocar vientos ni mar
+                texto = texto.replace(/\bMAR\b(?=\s*\d+)/gi, "Marzo");
+                texto = texto.replace(/\bENE\b(?=\s*\d+(?!\s*kt))/gi, "Enero");
                 
-                // 4. Aplicar diccionario de Nombres Propios
-                for (const [clave, valor] of Object.entries(nombresPropios)) {
-                    let regex = new RegExp("\\b" + clave + "\\b", "gi");
-                    resultado = resultado.replace(regex, valor);
+                const abrev = {
+                    "feb": "febrero", "abr": "abril", "may": "mayo", "jun": "junio",
+                    "jul": "julio", "ago": "agosto", "sep": "septiembre", "oct": "octubre",
+                    "nov": "noviembre", "dic": "diciembre",
+                    "lun": "lunes", "mie": "miércoles", "jue": "jueves", "vie": "viernes",
+                    "sab": "sábado", "dom": "domingo"
+                };
+                for(let [a, comp] of Object.entries(abrev)) {
+                    texto = texto.replace(new RegExp("\\b" + a + "\\b", "gi"), comp);
                 }
 
-                // 5. Detectar MAYÚSCULAS en vientos.
-                // NUEVA FÓRMULA ESTRICTA: Solo actúa si el viento está rodeado de espacios o puntuación, 
-                // evitando así tocar letras finales de palabras con tildes (como QuellóN o AyséN).
-                const regexViento = /(^|[\s,.\-(])(n|s|e|w|ne|nw|se|sw|nne|nnw|sse|ssw|ene|ese|wnw|wsw)(?:\/(n|s|e|w|ne|nw|se|sw|nne|nnw|sse|ssw|ene|ese|wnw|wsw))?(?=[\s,.\-)]|$)/gi;
-                
-                resultado = resultado.replace(regexViento, function(match) {
-                    return match.toUpperCase();
-                });
+                // --- 4. TODO A MINÚSCULAS ---
+                let res = texto.toLowerCase();
 
-                return resultado;
+                // --- 5. CORRECCIONES ORTOGRÁFICAS ---
+                const correccionesGenerales = {
+                    "vis": "visibilidad", "bahia": "bahía", "bahias": "bahías",
+                    "dia": "día", "dias": "días", "area": "área", "areas": "áreas",
+                    "oceano": "océano", "oceanico": "oceánico", "oceanica": "oceánica",
+                    "periodo": "período", "pronostico": "pronóstico",
+                    "maxima": "máxima", "minima": "mínima", "rafaga": "ráfaga", "rafagas": "ráfagas",
+                    "debil": "débil", "debiles": "débiles", "frio": "frío", "calido": "cálido",
+                    "precipitacion": "precipitación", "precipitaciones": "precipitaciones"
+                };
+                for (const [s, c] of Object.entries(correccionesGenerales)) {
+                    res = res.replace(new RegExp("\\b" + s + "\\b", "g"), c);
+                }
+
+                // --- 6. MAYÚSCULA INICIAL ---
+                res = res.charAt(0).toUpperCase() + res.slice(1);
+
+                // --- 7. NOMBRES PROPIOS, MESES Y DÍAS ---
+                // Todo esto recuperará su mayúscula de forma garantizada
+                const nombresPropios = {
+                    "sector": "Sector", "canal": "Canal", "moraleda": "Moraleda", "faro": "Faro", 
+                    "guafo": "Guafo", "islas": "Islas", "buta": "Buta", "chauques": "Chauques", 
+                    "corral": "Corral", "boca": "Boca", "raper": "Raper", "corona": "Corona", 
+                    "golfo": "Golfo", "penas": "Penas", "san": "San", "pedro": "Pedro", 
+                    "isla": "Isla", "desertores": "Desertores", "corcovado": "Corcovado", 
+                    "coronado": "Coronado", "seno": "Seno", "reloncavi": "Reloncaví",
+                    "aguas": "Aguas", "interiores": "Interiores", "quellon": "Quellón", 
+                    "guamblin": "Guamblín", "chacao": "Chacao", "ancud": "Ancud", 
+                    "puerto": "Puerto", "montt": "Montt", "aguirre": "Aguirre", "melinka": "Melinka", 
+                    "surweste": "Surweste", "norweste": "Norweste", "sur": "Sur", "norte": "Norte",
+                    "enero": "Enero", "febrero": "Febrero", "marzo": "Marzo", "abril": "Abril", 
+                    "mayo": "Mayo", "junio": "Junio", "julio": "Julio", "agosto": "Agosto", 
+                    "septiembre": "Septiembre", "octubre": "Octubre", "noviembre": "Noviembre", 
+                    "diciembre": "Diciembre",
+                    "lunes": "Lunes", "martes": "Martes", "miércoles": "Miércoles", 
+                    "jueves": "Jueves", "viernes": "Viernes", "sábado": "Sábado", "domingo": "Domingo",
+                    "utc": "UTC", "hrs": "hrs."
+                };
+                for (const [k, v] of Object.entries(nombresPropios)) {
+                    res = res.replace(new RegExp("\\b" + k + "\\b", "g"), v);
+                }
+
+                // --- 8. VIENTOS EN MAYÚSCULAS ---
+                const regexViento = /(^|[\s,.\-(])(n|s|e|w|ne|nw|se|sw|nne|nnw|sse|ssw|ene|ese|wnw|wsw)(?:\/(n|s|e|w|ne|nw|se|sw|nne|nnw|sse|ssw|ene|ese|wnw|wsw))?(?=[\s,.\-)]|$)/gi;
+                res = res.replace(regexViento, match => match.toUpperCase());
+
+                // --- 9. DEVOLVER LA INFORMACIÓN PROTEGIDA ---
+                res = res.replace(/__token_(\d+)__/g, function(match, index) {
+                    return tokens[parseInt(index)];
+                });
+                
+                // Limpieza en caso de puntos pegados seguidos ".."
+                res = res.replace(/\.\./g, ".");
+
+                return res;
             }
 
-            // Aplicar a los recuadros
+            // Actualizar vista previa
             document.getElementById('out-title').innerText = document.getElementById('in-title').value;
             document.getElementById('out-centro').innerText = document.getElementById('in-centro').value;
-            
             document.getElementById('out-area').innerText = limpiarTexto(document.getElementById('in-area').value);
             document.getElementById('out-periodo').innerText = limpiarTexto(document.getElementById('in-periodo').value);
             document.getElementById('out-condiciones').innerText = limpiarTexto(document.getElementById('in-condiciones').value);
