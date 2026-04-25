@@ -14,12 +14,11 @@
             --light-blue: #dae3ec; 
             --accent-blue: #2e86c1;
             --text-dark: #2c3e50;
-            --bg-dark: #0b1d35; /* Azul marino profundo para el fondo */
+            --bg-dark: #0b1d35; 
         }
 
         body {
             font-family: 'Montserrat', sans-serif;
-            /* Fondo elegante azul marino con un sutil gradiente */
             background: linear-gradient(135deg, var(--bg-dark) 0%, #1a3a5f 100%);
             min-height: 100vh;
             display: flex;
@@ -39,13 +38,11 @@
             align-items: flex-start; 
         }
 
-        /* --- Panel de Control --- */
         .editor-panel {
             flex: 1;
             background: white;
             padding: 25px;
             border-radius: 12px;
-            /* Sombra más pronunciada para resaltar sobre el fondo oscuro */
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             min-width: 350px;
             max-width: 450px;
@@ -101,7 +98,6 @@
             box-shadow: 0 6px 15px rgba(16, 65, 107, 0.4);
         }
 
-        /* --- Conversor --- */
         .kto-converter {
             background-color: #f8faff;
             padding: 15px;
@@ -125,7 +121,6 @@
             border-color: #a9dfbf;
         }
 
-        /* --- ÁREA DE CAPTURA (IMAGEN) --- */
         #aviso-capture {
             width: 500px; 
             background: white;
@@ -134,7 +129,6 @@
             flex-direction: column;
             height: fit-content; 
             align-self: flex-start;
-            /* Sombra elegante para la tarjeta de previsualización */
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
 
@@ -214,22 +208,21 @@
             margin-right: -20px; 
         }
 
-        /* --- CRÉDITOS FINALES ELEGANTES --- */
         .page-footer {
             margin-top: 60px;
             padding: 20px;
             width: 100%;
             text-align: center;
-            background: transparent; /* Fondo transparente para lucir el azul marino */
-            border-top: 1px solid rgba(255, 255, 255, 0.1); /* Línea sutil */
-            color: #dae3ec; /* Color claro y uniforme para todo el texto */
+            background: transparent; 
+            border-top: 1px solid rgba(255, 255, 255, 0.1); 
+            color: #dae3ec; 
             font-size: 0.95rem;
             letter-spacing: 0.5px;
         }
 
         .page-footer .name-tag {
             font-weight: 700;
-            color: #ffffff; /* El nombre un poco más blanco para destacar sutilmente */
+            color: #ffffff; 
         }
 
         @media (max-width: 600px) {
@@ -245,7 +238,7 @@
             <h2>Configurar Aviso</h2>
             
             <div class="kto-converter">
-                <label><i class="fas fa-calculator"></i> Conversor de Nudos (Ej: 20/30)</label>
+                <label><i class="fas fa-calculator"></i> Conversor de Nudos Manual (Ej: 20/30)</label>
                 <div class="converter-inputs">
                     <input type="text" id="in-knots" placeholder="Nudos" oninput="convertKnots()">
                     <i class="fas fa-arrow-right"></i>
@@ -337,12 +330,92 @@
 
     <script>
         function update() {
+            // 1. Diccionario de correcciones ortográficas (minúsculas y abreviaturas)
+            const correccionesGenerales = {
+                "vis": "visibilidad",
+                "bahia": "bahía", "bahias": "bahías",
+                "dia": "día", "dias": "días",
+                "area": "área", "areas": "áreas",
+                "oceano": "océano", "oceanico": "oceánico", "oceánica": "oceánica",
+                "periodo": "período", "pronostico": "pronóstico",
+                "maxima": "máxima", "minima": "mínima",
+                "oceanica": "oceánica","oceanico": "oceánico",
+                "rafaga": "ráfaga", "rafagas": "ráfagas",
+                "debil": "débil", "debiles": "débiles",
+                "frio": "frío", "calido": "cálido",
+                "precipitacion": "precipitación", "precipitaciones": "precipitaciones"
+            };
+
+            // 2. Diccionario de Nombres Propios y Geográficos
+            const nombresPropios = {
+                "sector": "Sector", "canal": "Canal", "moraleda": "Moraleda", "faro": "Faro", 
+                "guafo": "Guafo", "islas": "Islas", "buta": "Buta", "chauques": "Chauques", 
+                "corral": "Corral", "boca": "Boca", "raper": "Raper", "corona": "Corona", 
+                "golfo": "Golfo", "penas": "Penas", "san": "San", "pedro": "Pedro", 
+                "isla": "Isla", "desertores": "Desertores", "corcovado": "Corcovado", 
+                "coronado": "Coronado", "seno": "Seno", "reloncavi": "Reloncaví", "reloncaví": "Reloncaví",
+                "aguas": "Aguas", "interiores": "Interiores", "quellon": "Quellón", "quellón": "Quellón", 
+                "guamblin": "Guamblín", "guamblín": "Guamblín", "chacao": "Chacao", "ancud": "Ancud", 
+                "puerto": "Puerto", "montt": "Montt", "aguirre": "Aguirre", "melinka": "Melinka", 
+                "chile": "Chile", "armada": "Armada", "bio bio": "Bío Bío", "bío bío": "Bío Bío", 
+                "los lagos": "Los Lagos", "aysen": "Aysén", "aysén": "Aysén", "norte": "Norte", 
+                "sur": "Sur", "este": "Este", "weste": "Weste", "norweste": "Norweste", 
+                "noreste": "Noreste", "sureste": "Sureste", "surweste": "Surweste"
+            };
+
+            function limpiarTexto(texto) {
+                if (!texto) return "";
+                
+                // 1. Todo a minúsculas inicial
+                let resultado = texto.toLowerCase();
+
+                // 2. Aplicar correcciones ortográficas generales
+                for (const [sinTilde, conTilde] of Object.entries(correccionesGenerales)) {
+                    let regex = new RegExp("\\b" + sinTilde + "\\b", "gi");
+                    resultado = resultado.replace(regex, conTilde);
+                }
+
+                // NUEVO: 2.5 Cálculo automático de Nudos (KT) a (km/h) en el texto
+                // Detecta formatos como "50 kt" o "25/35 kt". 
+                // El (?!\s*\() evita que duplique el cálculo si ya hay un paréntesis adelante.
+                const regexNudos = /\b(\d+(?:\/\d+)?)\s*kt\b(?!\s*\()/gi;
+                resultado = resultado.replace(regexNudos, function(match, numeros) {
+                    // Divide por si es un rango (ej. 25/35) y calcula ambos
+                    const partes = numeros.split('/');
+                    const convertidos = partes.map(n => Math.round(parseFloat(n) * 1.852));
+                    // Devuelve "25/35 kt (46/65 km/h)"
+                    return match + ' (' + convertidos.join('/') + ' km/h)';
+                });
+
+                // 3. Primera letra del texto en Mayúscula
+                resultado = resultado.charAt(0).toUpperCase() + resultado.slice(1);
+                
+                // 4. Aplicar diccionario de Nombres Propios
+                for (const [clave, valor] of Object.entries(nombresPropios)) {
+                    let regex = new RegExp("\\b" + clave + "\\b", "gi");
+                    resultado = resultado.replace(regex, valor);
+                }
+
+                // 5. Detectar MAYÚSCULAS en vientos.
+                // NUEVA FÓRMULA ESTRICTA: Solo actúa si el viento está rodeado de espacios o puntuación, 
+                // evitando así tocar letras finales de palabras con tildes (como QuellóN o AyséN).
+                const regexViento = /(^|[\s,.\-(])(n|s|e|w|ne|nw|se|sw|nne|nnw|sse|ssw|ene|ese|wnw|wsw)(?:\/(n|s|e|w|ne|nw|se|sw|nne|nnw|sse|ssw|ene|ese|wnw|wsw))?(?=[\s,.\-)]|$)/gi;
+                
+                resultado = resultado.replace(regexViento, function(match) {
+                    return match.toUpperCase();
+                });
+
+                return resultado;
+            }
+
+            // Aplicar a los recuadros
             document.getElementById('out-title').innerText = document.getElementById('in-title').value;
             document.getElementById('out-centro').innerText = document.getElementById('in-centro').value;
-            document.getElementById('out-area').innerText = document.getElementById('in-area').value;
-            document.getElementById('out-periodo').innerText = document.getElementById('in-periodo').value;
-            document.getElementById('out-condiciones').innerText = document.getElementById('in-condiciones').value;
-            document.getElementById('out-recom').innerText = document.getElementById('in-recom').value;
+            
+            document.getElementById('out-area').innerText = limpiarTexto(document.getElementById('in-area').value);
+            document.getElementById('out-periodo').innerText = limpiarTexto(document.getElementById('in-periodo').value);
+            document.getElementById('out-condiciones').innerText = limpiarTexto(document.getElementById('in-condiciones').value);
+            document.getElementById('out-recom').innerText = limpiarTexto(document.getElementById('in-recom').value);
         }
 
         function convertKnots() {
