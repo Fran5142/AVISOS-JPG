@@ -142,8 +142,7 @@
             /* Fuente oficial tipo Arial para el documento final */
             font-family: Arial, Helvetica, sans-serif; 
             
-            /* Marco negro solicitado */
-            border: 4px solid #1a1a1a; 
+            /* Marco negro eliminado, mantenemos solo los bordes redondeados */
             border-radius: 12px; 
             overflow: hidden; 
         }
@@ -171,11 +170,11 @@
 
         .aviso-card {
             background-color: var(--off-card); /* Fondo gris celeste exacto */
-            border-radius: 25px; /* Ligeramente menos curvo, como en la foto */
+            border-radius: 25px; 
             padding: 25px;
             display: flex;
             flex-direction: column;
-            gap: 15px; /* Espaciado ajustado */
+            gap: 15px; 
         }
 
         .section {
@@ -191,10 +190,9 @@
             align-items: center;
             justify-content: center;
             font-size: 35px; 
-            color: var(--off-teal); /* Iconos del mismo color que los títulos */
+            color: var(--off-teal); 
         }
 
-        /* Ajuste de colores y pesos para el texto interno */
         .content b {
             font-size: 18px;
             color: var(--off-teal);
@@ -206,15 +204,14 @@
             margin: 0;
             line-height: 1.3;
             font-size: 16px;
-            color: var(--off-text); /* Color pizarra oscuro */
+            color: var(--off-text); 
             display: inline;
         }
 
-        /* Contenedor específico para forzar saltos de línea y justificar texto */
         .text-block {
-            display: block; /* Cambiado a block para asegurar que el justificado actúe bien en todo el contenedor */
+            display: block; 
             width: 100%;
-            text-align: justify; /* Texto justificado aplicado aquí */
+            text-align: justify; 
         }
 
         .footer-logo {
@@ -333,7 +330,7 @@
                     <div class="content">
                         <div class="text-block">
                             <b>Condiciones esperadas:</b><br>
-                            <p id="out-condiciones">Cubierto a nublado, visibilidad buena a regular (10/6 km) chubascos, viento S/SW 25/35 nudos (46/65 km/h) rachas 50 nudos (93 km/h), mar gruesa a muy gruesa (3.0/5.0 m).</p>
+                            <p id="out-condiciones">Cubierto a nublado, visibilidad buena a regular (10/6 km) chubascos, viento S/SW 25/35 nudos (46/65 km/h) rachas 50 nudos (93 km/h), mar gruesa a muy gruesa (3.0/5.0 m). (TEMPORAL)</p>
                         </div>
                     </div>
                 </div>
@@ -358,7 +355,7 @@
 
     <div class="page-footer">
         <i class="fas fa-code" style="margin-right: 8px;"></i> 
-        Herramienta desarrollada por <span class="name-tag">C1º (Met.) Francisco Salas Muñoz</span>
+        Herramienta desarrollada por <span class="name-tag">Francisco Salas Muñoz</span>
     </div>
 
     <script>
@@ -399,7 +396,7 @@
                 });
 
                 // --- 2. CALCULAR NUDOS Y PROTEGERLOS ---
-                const regexNudos = /\b(\d+(?:\/\d+)?)\s*(kt|nudos)\b(?!\s*\()/gi;
+                const regexNudos = /\b(\d+(?:\/\d+)?)\s*(kt|nudos)\b(?!\s*\([\d\/\s]+km\/h\))/gi;
                 texto = texto.replace(regexNudos, function(match, numeros, unidad) {
                     const partes = numeros.split('/');
                     const convertidos = partes.map(n => Math.round(parseFloat(n) * 1.852));
@@ -409,7 +406,14 @@
                     return `__TOKEN_${tokens.length - 1}__`;
                 });
 
-                // --- 3. EXPANDIR ABREVIATURAS SUELTAS ---
+                // --- 3. PROTEGER PALABRAS CLAVE EN MAYÚSCULAS ENTRE PARÉNTESIS ---
+                const regexAvisos = /\((MAL TIEMPO|TEMPORAL|MAL TEMPORAL)\)/gi;
+                texto = texto.replace(regexAvisos, function(match, p1) {
+                    tokens.push("(" + p1.toUpperCase() + ")");
+                    return `__TOKEN_${tokens.length - 1}__`;
+                });
+
+                // --- 4. EXPANDIR ABREVIATURAS SUELTAS ---
                 texto = texto.replace(/\bMAR\b(?=\s*\d+)/gi, "Marzo");
                 texto = texto.replace(/\bENE\b(?=\s*\d+(?!\s*(kt|nudos)))/gi, "Enero");
                 
@@ -424,10 +428,10 @@
                     texto = texto.replace(new RegExp("\\b" + a + "\\b", "gi"), comp);
                 }
 
-                // --- 4. TODO A MINÚSCULAS ---
+                // --- 5. TODO A MINÚSCULAS ---
                 let res = texto.toLowerCase();
 
-                // --- 5. CORRECCIONES ORTOGRÁFICAS ---
+                // --- 6. CORRECCIONES ORTOGRÁFICAS ---
                 const correccionesGenerales = {
                     "vis": "visibilidad", "bahia": "bahía", "bahias": "bahías",
                     "dia": "día", "dias": "días", "area": "área", "areas": "áreas",
@@ -441,10 +445,11 @@
                     res = res.replace(new RegExp("\\b" + s + "\\b", "g"), c);
                 }
 
-                // --- 6. MAYÚSCULA INICIAL ---
+                // --- 7. MAYÚSCULAS INICIALES ---
                 res = res.charAt(0).toUpperCase() + res.slice(1);
 
-                // --- 7. NOMBRES PROPIOS, MESES Y DÍAS ---
+                // --- 8. NOMBRES PROPIOS, MESES Y DÍAS ---
+                // Se agregó "este" y "oeste" para que mantengan la letra capital, igual que "norte" y "sur"
                 const nombresPropios = {
                     "sector": "Sector", "canal": "Canal", "moraleda": "Moraleda", "faro": "Faro", 
                     "guafo": "Guafo", "islas": "Islas", "buta": "Buta", "chauques": "Chauques", 
@@ -456,6 +461,7 @@
                     "guamblin": "Guamblín", "chacao": "Chacao", "ancud": "Ancud", 
                     "puerto": "Puerto", "montt": "Montt", "aguirre": "Aguirre", "melinka": "Melinka", 
                     "surweste": "Surweste", "norweste": "Norweste", "sur": "Sur", "norte": "Norte",
+                    "este": "Este", "weste": "Weste",
                     "enero": "Enero", "febrero": "Febrero", "marzo": "Marzo", "abril": "Abril", 
                     "mayo": "Mayo", "junio": "Junio", "julio": "Julio", "agosto": "Agosto", 
                     "septiembre": "Septiembre", "octubre": "Octubre", "noviembre": "Noviembre", 
@@ -468,11 +474,16 @@
                     res = res.replace(new RegExp("\\b" + k + "\\b", "g"), v);
                 }
 
-                // --- 8. VIENTOS EN MAYÚSCULAS ---
+                // --- 9. VIENTOS EN MAYÚSCULAS ---
+                // Ahora respeta TODAS las abreviaturas (N, NW, N/NW, S/SE, etc) y las pasa a mayúsculas
                 const regexViento = /(^|[\s,.\-(])(n|s|e|w|ne|nw|se|sw|nne|nnw|sse|ssw|ene|ese|wnw|wsw)(?:\/(n|s|e|w|ne|nw|se|sw|nne|nnw|sse|ssw|ene|ese|wnw|wsw))?(?=[\s,.\-)]|$)/gi;
                 res = res.replace(regexViento, match => match.toUpperCase());
 
-                // --- 9. DEVOLVER LA INFORMACIÓN PROTEGIDA ---
+                // --- 10. TRADUCCIÓN AISLADA DE NW A NORWESTE ---
+                // Al ejecutarse DESPUÉS de la regla anterior, solo afectará si está suelto (" NW "), pero no afectará a un "N/NW"
+                res = res.replace(/(^|[\s,.\-(])NW(?=[\s,.\-)]|$)/g, "$1Norweste");
+
+                // --- 11. DEVOLVER LA INFORMACIÓN PROTEGIDA ---
                 res = res.replace(/__token_(\d+)__/g, function(match, index) {
                     return tokens[parseInt(index)];
                 });
@@ -488,7 +499,7 @@
             document.getElementById('out-periodo').innerText = limpiarTexto(document.getElementById('in-periodo').value);
             document.getElementById('out-condiciones').innerText = limpiarTexto(document.getElementById('in-condiciones').value);
             
-            // Especial para Recomendaciones: Mantener minúscula en la primera letra después del "Recomendaciones:" como en la imagen
+            // --- LÓGICA DE RECOMENDACIONES ---
             let recomTexto = document.getElementById('in-recom').value;
             if(recomTexto) {
                 recomTexto = recomTexto.charAt(0).toLowerCase() + recomTexto.slice(1);
