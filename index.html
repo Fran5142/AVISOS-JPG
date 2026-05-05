@@ -363,6 +363,9 @@
             function limpiarTexto(texto) {
                 if (!texto) return "";
                 
+                // Eliminar prefijo si el usuario pega literalmente "Área Afectada: "
+                texto = texto.replace(/^(?:Área Afectada|Area Afectada):\s*/i, "");
+
                 let tokens = [];
 
                 // --- 1. PROTEGER BLOQUE "VALIDO DESDE..." ---
@@ -449,7 +452,6 @@
                 res = res.charAt(0).toUpperCase() + res.slice(1);
 
                 // --- 8. NOMBRES PROPIOS, MESES Y DÍAS ---
-                // Se agregó "este" y "oeste" para que mantengan la letra capital, igual que "norte" y "sur"
                 const nombresPropios = {
                     "sector": "Sector", "canal": "Canal", "moraleda": "Moraleda", "faro": "Faro", 
                     "guafo": "Guafo", "islas": "Islas", "buta": "Buta", "chauques": "Chauques", 
@@ -467,7 +469,8 @@
                     "septiembre": "Septiembre", "octubre": "Octubre", "noviembre": "Noviembre", 
                     "diciembre": "Diciembre",
                     "lunes": "Lunes", "martes": "Martes", "miércoles": "Miércoles", 
-                    "jueves": "Jueves", "viernes": "Viernes", "sábado": "Sábado", "domingo": "Domingo",
+                    "jueves": "Jueves", "viernes": "Viernes", "sábado": "Sábado", "domingo": "Domingo", 
+                    "anna": "Anna", "pink": "Pink", "bahía": "Bahía", "bahías": "Bahías",
                     "utc": "UTC", "hrs": "hrs.", "am": "AM.", "pm": "PM."
                 };
                 for (const [k, v] of Object.entries(nombresPropios)) {
@@ -475,12 +478,10 @@
                 }
 
                 // --- 9. VIENTOS EN MAYÚSCULAS ---
-                // Ahora respeta TODAS las abreviaturas (N, NW, N/NW, S/SE, etc) y las pasa a mayúsculas
                 const regexViento = /(^|[\s,.\-(])(n|s|e|w|ne|nw|se|sw|nne|nnw|sse|ssw|ene|ese|wnw|wsw)(?:\/(n|s|e|w|ne|nw|se|sw|nne|nnw|sse|ssw|ene|ese|wnw|wsw))?(?=[\s,.\-)]|$)/gi;
                 res = res.replace(regexViento, match => match.toUpperCase());
 
                 // --- 10. TRADUCCIÓN AISLADA DE NW A NORWESTE ---
-                // Al ejecutarse DESPUÉS de la regla anterior, solo afectará si está suelto (" NW "), pero no afectará a un "N/NW"
                 res = res.replace(/(^|[\s,.\-(])NW(?=[\s,.\-)]|$)/g, "$1Norweste");
 
                 // --- 11. DEVOLVER LA INFORMACIÓN PROTEGIDA ---
